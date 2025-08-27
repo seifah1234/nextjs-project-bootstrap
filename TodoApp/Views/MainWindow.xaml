@@ -1,0 +1,354 @@
+<Window x:Class="TodoApp.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Modern ToDo App" 
+        Height="700" 
+        Width="1000"
+        MinHeight="500"
+        MinWidth="800"
+        Background="{DynamicResource PrimaryBackgroundBrush}"
+        WindowStartupLocation="CenterScreen">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" 
+                Background="{DynamicResource SecondaryBackgroundBrush}" 
+                Padding="{DynamicResource LargePadding}"
+                Effect="{DynamicResource DefaultShadow}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Label Content="📋" FontSize="32" Margin="0,0,10,0"/>
+                    <Label Content="Modern ToDo" Style="{StaticResource HeaderLabelStyle}" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Label Content="🌙" FontSize="20" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                    <CheckBox x:Name="ThemeToggle" 
+                              Content="Dark Mode" 
+                              Style="{StaticResource ModernCheckBoxStyle}"
+                              Checked="ThemeToggle_Checked"
+                              Unchecked="ThemeToggle_Unchecked"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- Filters and Search -->
+        <Border Grid.Row="1" 
+                Background="{DynamicResource PrimaryBackgroundBrush}" 
+                Padding="{DynamicResource DefaultPadding}"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBox x:Name="SearchTextBox"
+                         Grid.Column="0"
+                         Style="{StaticResource ModernTextBoxStyle}"
+                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         Tag="Search todos..."
+                         Margin="0,0,10,0"/>
+
+                <ComboBox x:Name="CategoryFilter"
+                          Grid.Column="1"
+                          Style="{StaticResource ModernComboBoxStyle}"
+                          ItemsSource="{Binding Categories}"
+                          SelectedItem="{Binding SelectedCategory}"
+                          Margin="0,0,10,0"/>
+
+                <ComboBox x:Name="PriorityFilter"
+                          Grid.Column="2"
+                          Style="{StaticResource ModernComboBoxStyle}"
+                          SelectedItem="{Binding SelectedPriority}"
+                          Margin="0,0,10,0">
+                    <ComboBox.Items>
+                        <ComboBoxItem Content="All Priorities" Tag="{x:Null}"/>
+                        <ComboBoxItem Content="High Priority" Tag="High"/>
+                        <ComboBoxItem Content="Medium Priority" Tag="Medium"/>
+                        <ComboBoxItem Content="Low Priority" Tag="Low"/>
+                    </ComboBox.Items>
+                </ComboBox>
+
+                <Button Grid.Column="3"
+                        Content="➕ Add Todo"
+                        Style="{StaticResource ModernButtonStyle}"
+                        Command="{Binding AddTodoCommand}"/>
+            </Grid>
+        </Border>
+
+        <!-- Main Content -->
+        <Grid Grid.Row="2" Margin="{DynamicResource DefaultMargin}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Todo List -->
+            <Border Grid.Column="0" 
+                    Background="{DynamicResource PrimaryBackgroundBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="{DynamicResource DefaultCornerRadius}"
+                    Margin="0,0,10,0">
+                <Grid>
+                    <ListView x:Name="TodoListView"
+                              Style="{StaticResource ModernListViewStyle}"
+                              ItemsSource="{Binding FilteredTodos}"
+                              SelectedItem="{Binding SelectedTodo}"
+                              BorderThickness="0">
+                        <ListView.ItemContainerStyle>
+                            <Style TargetType="ListViewItem" BasedOn="{StaticResource ModernListViewItemStyle}">
+                                <EventSetter Event="MouseDoubleClick" Handler="TodoItem_DoubleClick"/>
+                            </Style>
+                        </ListView.ItemContainerStyle>
+                        <ListView.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="5">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Completion Checkbox -->
+                                    <CheckBox Grid.Column="0" Grid.Row="0" Grid.RowSpan="3"
+                                              IsChecked="{Binding IsCompleted}"
+                                              VerticalAlignment="Center"
+                                              Margin="0,0,10,0"
+                                              Command="{Binding DataContext.ToggleCompleteCommand, RelativeSource={RelativeSource AncestorType=ListView}}"/>
+
+                                    <!-- Title -->
+                                    <TextBlock Grid.Column="1" Grid.Row="0"
+                                               Text="{Binding Title}"
+                                               FontWeight="SemiBold"
+                                               FontSize="16"
+                                               Foreground="{DynamicResource PrimaryTextBrush}">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                        <Setter Property="TextDecorations" Value="Strikethrough"/>
+                                                        <Setter Property="Foreground" Value="{DynamicResource CompletedBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+
+                                    <!-- Description -->
+                                    <TextBlock Grid.Column="1" Grid.Row="1"
+                                               Text="{Binding Description}"
+                                               Foreground="{DynamicResource SecondaryTextBrush}"
+                                               TextWrapping="Wrap"
+                                               Margin="0,2,0,0">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Description}" Value="">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+
+                                    <!-- Category and Due Date -->
+                                    <StackPanel Grid.Column="1" Grid.Row="2" Orientation="Horizontal" Margin="0,5,0,0">
+                                        <Border Background="{DynamicResource TertiaryBackgroundBrush}"
+                                                CornerRadius="10"
+                                                Padding="6,2"
+                                                Margin="0,0,5,0">
+                                            <TextBlock Text="{Binding Category}"
+                                                       FontSize="11"
+                                                       Foreground="{DynamicResource SecondaryTextBrush}">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding Category}" Value="">
+                                                                <Setter Property="Text" Value="No Category"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </Border>
+                                        <TextBlock Text="{Binding DueDateText}"
+                                                   FontSize="11"
+                                                   Foreground="{DynamicResource SecondaryTextBrush}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                                                            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+                                                            <Setter Property="FontWeight" Value="Bold"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding IsDueSoon}" Value="True">
+                                                            <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+                                                            <Setter Property="FontWeight" Value="Bold"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </StackPanel>
+
+                                    <!-- Priority Indicator -->
+                                    <Border Grid.Column="2" Grid.Row="0" Grid.RowSpan="3"
+                                            Width="4"
+                                            CornerRadius="2"
+                                            VerticalAlignment="Stretch"
+                                            Margin="10,0">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding Priority}" Value="High">
+                                                        <Setter Property="Background" Value="{DynamicResource HighPriorityBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Priority}" Value="Medium">
+                                                        <Setter Property="Background" Value="{DynamicResource MediumPriorityBrush}"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding Priority}" Value="Low">
+                                                        <Setter Property="Background" Value="{DynamicResource LowPriorityBrush}"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                    </Border>
+
+                                    <!-- Status Indicator -->
+                                    <TextBlock Grid.Column="3" Grid.Row="0" Grid.RowSpan="3"
+                                               VerticalAlignment="Center"
+                                               FontSize="20"
+                                               Margin="5,0">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Text" Value="⏳"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsCompleted}" Value="True">
+                                                        <Setter Property="Text" Value="✅"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                                                        <Setter Property="Text" Value="⚠️"/>
+                                                    </DataTrigger>
+                                                    <DataTrigger Binding="{Binding IsDueSoon}" Value="True">
+                                                        <Setter Property="Text" Value="🔔"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Grid>
+                            </DataTemplate>
+                        </ListView.ItemTemplate>
+                    </ListView>
+
+                    <!-- Empty State -->
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <StackPanel.Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Visibility" Value="Collapsed"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding FilteredTodos.Count}" Value="0">
+                                        <Setter Property="Visibility" Value="Visible"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </StackPanel.Style>
+                        <TextBlock Text="📝" FontSize="48" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                        <TextBlock Text="No todos found" 
+                                   FontSize="18" 
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   HorizontalAlignment="Center"/>
+                        <TextBlock Text="Create your first todo to get started!" 
+                                   FontSize="14" 
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,5,0,0"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Action Panel -->
+            <Border Grid.Column="1" 
+                    Background="{DynamicResource SecondaryBackgroundBrush}"
+                    BorderBrush="{DynamicResource BorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="{DynamicResource DefaultCornerRadius}"
+                    Padding="{DynamicResource DefaultPadding}"
+                    Width="200">
+                <StackPanel>
+                    <Label Content="Actions" Style="{StaticResource SubHeaderLabelStyle}"/>
+                    
+                    <Button Content="✏️ Edit Todo"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Command="{Binding EditTodoCommand}"
+                            Margin="0,5"/>
+                    
+                    <Button Content="🗑️ Delete Todo"
+                            Style="{StaticResource DangerButtonStyle}"
+                            Command="{Binding DeleteTodoCommand}"
+                            Margin="0,5"/>
+                    
+                    <Separator Margin="0,10" Background="{DynamicResource BorderBrush}"/>
+                    
+                    <Button Content="🧹 Clear Completed"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Command="{Binding ClearCompletedCommand}"
+                            Margin="0,5"/>
+
+                    <Separator Margin="0,10" Background="{DynamicResource BorderBrush}"/>
+
+                    <!-- Statistics -->
+                    <Label Content="Statistics" Style="{StaticResource SubHeaderLabelStyle}"/>
+                    
+                    <StackPanel Margin="0,5">
+                        <TextBlock Text="{Binding TotalTodos, StringFormat='Total: {0}'}" 
+                                   Foreground="{DynamicResource PrimaryTextBrush}" Margin="0,2"/>
+                        <TextBlock Text="{Binding CompletedTodos, StringFormat='Completed: {0}'}" 
+                                   Foreground="{DynamicResource SuccessBrush}" Margin="0,2"/>
+                        <TextBlock Text="{Binding PendingTodos, StringFormat='Pending: {0}'}" 
+                                   Foreground="{DynamicResource AccentBrush}" Margin="0,2"/>
+                        <TextBlock Text="{Binding OverdueTodos, StringFormat='Overdue: {0}'}" 
+                                   Foreground="{DynamicResource DangerBrush}" Margin="0,2"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- Status Bar -->
+        <Border Grid.Row="3" 
+                Background="{DynamicResource TertiaryBackgroundBrush}" 
+                Padding="10,5"
+                BorderBrush="{DynamicResource BorderBrush}"
+                BorderThickness="0,1,0,0">
+            <TextBlock Text="{Binding FilteredTodos.Count, StringFormat='Showing {0} todo(s)'}" 
+                       Foreground="{DynamicResource SecondaryTextBrush}"
+                       FontSize="12"/>
+        </Border>
+    </Grid>
+</Window>
